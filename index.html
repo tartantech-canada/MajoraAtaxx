@@ -3,27 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Majora's Ataxx: The 24 Masks</title>
+    <title>Great Fairy Ataxx: NNUE</title>
     <style>
         :root {
-            --termite-purple: #2d1b4d;
+            --termite-purple: #1a0b2e;
             --clock-gold: #d4af37;
-            --wood-dark: #3e2723;
-            --stone-bg: #c0c0c0;
-            --mask-glow: 0 0 10px rgba(212, 175, 55, 0.5);
+            --clock-gold-glow: rgba(212, 175, 55, 0.4);
+            --wood-dark: #2b1d12;
+            --p1-color: #2ecc71;
+            --p2-color: #e74c3c;
         }
 
-        * { 
-            touch-action: manipulation; 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            user-select: none;
-        }
+        * { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 
         body {
             background-color: var(--termite-purple);
-            background-image: radial-gradient(circle, #3d2b5d 1px, transparent 1px);
-            background-size: 20px 20px;
             color: #eee;
             margin: 0;
             display: flex;
@@ -34,157 +28,151 @@
             overflow-x: hidden;
         }
 
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.3; }
+
         .header {
             width: 100%;
             max-width: 500px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: rgba(0,0,0,0.8);
-            border-bottom: 2px solid var(--clock-gold);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .main-container {
-            width: 100%;
-            max-width: 500px;
-            padding: 10px;
-            display: flex;
             flex-direction: column;
-            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0,0,0,0.85);
+            border-bottom: 2px solid var(--clock-gold);
+            z-index: 10;
         }
 
-        .score-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+        .main-container { width: 100%; max-width: 500px; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+
+        .score-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
         .score-card {
-            background: var(--wood-dark);
-            padding: 10px;
+            background: rgba(43, 29, 18, 0.9);
+            padding: 8px;
             border: 2px solid #5d4037;
-            border-radius: 8px;
+            border-radius: 10px;
             text-align: center;
-            position: relative;
             transition: all 0.3s ease;
         }
 
-        .score-card.active {
-            border-color: var(--clock-gold);
-            box-shadow: var(--mask-glow);
-            transform: scale(1.02);
-        }
+        .score-card.active { border-color: var(--clock-gold); box-shadow: 0 0 15px var(--clock-gold-glow); transform: scale(1.03); }
 
-        .count { font-size: 2rem; font-weight: bold; line-height: 1; margin: 5px 0; color: var(--clock-gold); }
-        .label { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: #aaa; }
+        .count { font-size: 1.6rem; font-weight: bold; color: var(--clock-gold); margin: 2px 0; }
+        .label { font-size: 0.6rem; font-weight: bold; text-transform: uppercase; color: #bbb; }
         
         #board {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             grid-template-rows: repeat(7, 1fr);
-            gap: 4px;
-            background-color: #1a1a1a;
+            gap: 3px;
+            background: #111;
             border: 6px solid #333;
             aspect-ratio: 1 / 1;
             width: 100%;
             border-radius: 4px;
             position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            padding: 4px;
         }
 
         .cell {
-            background-color: #2c2c2c;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            cursor: pointer;
-            border-radius: 2px;
+            background: #2a2a2a;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; cursor: pointer; border-radius: 2px;
+            transition: background 0.2s ease;
         }
 
         .blocker { 
-            background: #111;
-            background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l20 20M20 0L0 20' stroke='%23333' fill='none'/%3E%3C/svg%3E");
-            cursor: default;
+            background: #000;
+            background-image: radial-gradient(#444 10%, transparent 20%);
+            background-size: 6px 6px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
         }
 
         .piece {
-            width: 90%;
-            height: 90%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 85%; height: 85%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; z-index: 2;
         }
 
-        .selected { background-color: #444 !important; }
-        .selected::before {
-            content: ''; position: absolute; inset: 0;
-            border: 2px solid var(--clock-gold);
+        .selected { background: #444 !important; border: 2px solid var(--clock-gold); }
+
+        .move-hint {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            pointer-events: none;
             animation: pulse 1.5s infinite;
         }
+        .clone-hint { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
+        .jump-hint { background: #3498db; box-shadow: 0 0 8px #3498db; }
 
         @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
         }
-
-        .clone-target::after { content: '●'; font-size: 8px; color: #2ecc71; position: absolute; opacity: 0.6; }
-        .jump-target::after { content: '●'; font-size: 8px; color: #f1c40f; position: absolute; opacity: 0.6; }
 
         .settings {
-            background: rgba(0,0,0,0.4);
-            padding: 15px;
-            border: 1px solid #444;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
             border-radius: 8px;
-            display: grid;
-            gap: 12px;
+            display: grid; gap: 8px;
+            font-size: 0.75rem;
         }
 
-        .setting-group { display: flex; flex-direction: column; gap: 4px; }
-        .setting-group label { font-size: 0.7rem; font-weight: bold; color: var(--clock-gold); text-transform: uppercase; }
+        .setting-group { display: flex; flex-direction: column; gap: 2px; }
+        .setting-group label { color: var(--clock-gold); text-transform: uppercase; font-size: 0.6rem; font-weight: bold; }
 
         select, button {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #555;
-            background: #222;
-            color: white;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            cursor: pointer;
+            width: 100%; padding: 6px; border: 1px solid #444; background: #111; color: white; border-radius: 4px; font-family: inherit;
         }
 
-        button.primary {
-            background: linear-gradient(to bottom, #7b1fa2, #4a148c);
-            color: white;
-            border: 1px solid var(--clock-gold);
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        input[type="range"] { accent-color: var(--clock-gold); cursor: pointer; }
 
+        button.primary { background: #4a148c; border-color: var(--clock-gold); font-weight: bold; cursor: pointer; }
+        
         .overlay {
-            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9);
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95);
             display: none; justify-content: center; align-items: center; z-index: 1000;
         }
 
-        .modal {
-            background: var(--wood-dark); padding: 30px; border-radius: 12px; text-align: center;
-            border: 3px solid var(--clock-gold); width: 85%; max-width: 400px;
+        .modal { background: var(--wood-dark); padding: 30px; border-radius: 15px; border: 3px solid var(--clock-gold); text-align: center; width: 80%; }
+        
+        .ai-status-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-top: 5px;
         }
+
+        .fairy-companion {
+            font-size: 1.4rem;
+            filter: drop-shadow(0 0 5px pink);
+            transition: all 0.2s ease;
+        }
+
+        .workshop-hint {
+            text-align: center;
+            font-size: 0.65rem;
+            color: var(--clock-gold);
+            margin-top: -5px;
+            font-style: italic;
+        }
+
+        #ai-log-text { font-family: monospace; color: #888; }
     </style>
 </head>
 <body>
 
+<canvas id="bg-canvas"></canvas>
+
 <div class="header">
-    <div style="font-weight: bold; color: var(--clock-gold); letter-spacing: 2px;">MAJORAS ATAXX</div>
-    <div id="ai-status" style="font-size: 0.65rem; color: #aaa;">DAWN OF A NEW GAME</div>
+    <div style="font-weight: bold; color: var(--clock-gold); letter-spacing: 3px; font-size: 1.2rem;">GREAT FAIRY ENGINE</div>
+    <div class="ai-status-container">
+        <div id="fairy" class="fairy-companion">🧚‍♀️</div>
+        <div id="ai-log-text">HEY! LISTEN!</div>
+    </div>
 </div>
 
 <div class="main-container">
@@ -202,385 +190,597 @@
     </div>
 
     <div id="board"></div>
+    <div id="workshop-note" class="workshop-hint" style="display: none;">Tap empty cells to toggle stone blocks</div>
 
     <div class="settings">
         <div class="setting-group">
-            <div style="display: flex; justify-content: space-between;">
-                <label>Difficulty (Song of Time Tempo)</label>
-                <span id="lv-val" style="color: var(--clock-gold); font-weight: bold;">50</span>
-            </div>
-            <input type="range" id="lv-slider" min="1" max="100" value="50" style="width: 100%; accent-color: var(--clock-gold);">
-        </div>
-
-        <div class="setting-group">
-            <label>Classic Level Map</label>
-            <select id="map-select" onchange="game.reset()">
-                <option value="random">--- Random Curse ---</option>
-                <option value="0">Level 1: The Arena</option>
-                <option value="1">Level 2: Cornered</option>
-                <option value="2">Level 3: Central Point</option>
-                <option value="3">Level 4: Crossfire</option>
-                <option value="4">Level 5: Double Bars</option>
-                <option value="5">Level 6: H-Gate</option>
-                <option value="6">Level 7: The Square</option>
-                <option value="7">Level 8: Diamonds</option>
-                <option value="8">Level 9: Pillars</option>
-                <option value="9">Level 10: X-Marks</option>
-                <option value="10">Level 11: Divided</option>
-                <option value="11">Level 12: Gridlock</option>
-                <option value="12">Level 13: Funnel</option>
-                <option value="13">Level 14: Four Squares</option>
-                <option value="14">Level 15: Checker</option>
-                <option value="15">Level 16: The Maze</option>
-                <option value="16">Level 17: Inner Walls</option>
-                <option value="17">Level 18: Isolation</option>
-                <option value="18">Level 19: The Gauntlet</option>
-            </select>
+            <label>Arcade Stage Pattern</label>
+            <select id="map-select" onchange="game.handleMapChange()"></select>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <div class="setting-group">
-                <label>Mode</label>
+                <label>Opponent</label>
                 <select id="game-mode">
-                    <option value="pva">vs AI</option>
+                    <option value="pva">vs Great Fairy AI</option>
                     <option value="pvp">Local 2P</option>
                 </select>
             </div>
             <div class="setting-group">
-                <label>Action</label>
-                <button onclick="game.switchSides()">Switch Sides</button>
+                <label>Level: <span id="difficulty-val">10</span></label>
+                <input type="range" id="difficulty-slider" min="1" max="20" value="10" oninput="game.updateDifficultyLabel()">
             </div>
         </div>
+        
+        <div id="difficulty-name" style="text-align: center; font-size: 0.65rem; color: #888; margin-top: -5px;">Skull Kid (Balanced)</div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button onclick="game.undo()">Undo Move</button>
-            <button onclick="game.reset()" class="primary">Reset World</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <button onclick="game.undo()">Undo</button>
+            <button onclick="game.switchSides()">Switch Turn</button>
+            <button onclick="game.reset()" class="primary">Reset</button>
         </div>
     </div>
 </div>
 
 <div id="overlay" class="overlay">
     <div class="modal">
-        <h1 id="win-title" style="color: var(--clock-gold); margin: 0; font-size: 2rem;">Game Over</h1>
-        <p id="win-desc" style="color: #aaa; margin-bottom: 25px;"></p>
-        <button class="primary" onclick="game.reset()">Play Again</button>
+        <h2 id="win-title" style="color: var(--clock-gold);">GAME OVER</h2>
+        <p id="win-desc"></p>
+        <button class="primary" onclick="game.reset()">Return to Day 1</button>
     </div>
 </div>
 
 <script>
-const ALL_MASKS = [
-    { name: "Majora's Mask", icon: "👹" },
-    { name: "Deku Mask", icon: "🌿" },
-    { name: "Goron Mask", icon: "🪨" },
-    { name: "Zora Mask", icon: "🐬" },
-    { name: "Fierce Deity", icon: "⚔️" },
-    { name: "Mask of Truth", icon: "👁️" },
-    { name: "Keaton Mask", icon: "🦊" },
-    { name: "Bunny Hood", icon: "🐇" },
-    { name: "Postman's Hat", icon: "✉️" },
-    { name: "All-Night Mask", icon: "☕" },
-    { name: "Blast Mask", icon: "💣" },
-    { name: "Stone Mask", icon: "🗿" },
-    { name: "Great Fairy Mask", icon: "🧚" },
-    { name: "Bremen Mask", icon: "🐦" },
-    { name: "Don Gero Mask", icon: "🐸" },
-    { name: "Mask of Scents", icon: "🐽" },
-    { name: "Romani's Mask", icon: "🐮" },
-    { name: "Circus Leader", icon: "🤡" },
-    { name: "Kafei's Mask", icon: "🕵️" },
-    { name: "Couple's Mask", icon: "💞" },
-    { name: "Mask of Confid.", icon: "🎭" },
-    { name: "Kamaro Mask", icon: "💃" },
-    { name: "Gibdo Mask", icon: "🤕" },
-    { name: "Garo Mask", icon: "👺" },
-    { name: "Captain's Hat", icon: "💀" },
-    { name: "Giant's Mask", icon: "📏" }
-];
-
-const SIZE = 7;
-const EMPTY = 0, P1 = 1, P2 = 2, BLOCK = 3;
-
-const ARCADE_MAPS = [
-    [],
-    [[1,1],[1,5],[5,1],[5,5]],
-    [[3,3]],
-    [[3,0],[3,1],[3,5],[3,6],[0,3],[1,3],[5,3],[6,3]],
-    [[2,0],[2,1],[2,5],[2,6],[4,0],[4,1],[4,5],[4,6]],
-    [[3,2],[3,4],[2,3],[4,3]],
-    [[2,2],[2,3],[2,4],[4,2],[4,3],[4,4],[3,2],[3,4]],
-    [[1,3],[3,1],[3,5],[5,3]],
-    [[0,3],[6,3],[3,0],[3,6]],
-    [[1,1],[1,5],[5,1],[5,5],[2,2],[2,4],[4,2],[4,4],[3,3]],
-    [[3,0],[3,1],[3,2],[3,4],[3,5],[3,6]],
-    [[1,1],[1,3],[1,5],[3,1],[3,3],[3,5],[5,1],[5,3],[5,5]],
-    [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]],
-    [[0,2],[0,4],[2,0],[2,6],[4,0],[4,6],[6,2],[6,4]],
-    [[1,0],[3,0],[5,0],[0,1],[2,1],[4,1],[6,1],[1,2],[3,2],[5,2]],
-    [[1,1],[1,2],[1,3],[2,1],[3,1],[5,5],[5,4],[5,3],[4,5],[3,5]],
-    [[2,2],[2,4],[4,2],[4,4]],
-    [[2,1],[2,2],[2,4],[2,5],[4,1],[4,2],[4,4],[4,5]],
-    [[3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6],[0,3],[1,3],[2,3],[4,3],[5,3],[6,3]]
-];
-
-const AudioEngine = {
+/**
+ * Audio Engine (Synthesizer)
+ */
+const AudioFX = {
     ctx: null,
-    init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+    init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    },
     play(type) {
-        this.init(); if(this.ctx.state === 'suspended') this.ctx.resume();
-        const t = this.ctx.currentTime;
-        if(type === 'ui') this.note(440, 0.1, 0.05, t);
-        if(type === 'move') this.glide(200, 400, 0.15, t);
-        if(type === 'capture') { this.note(150, 0.2, 0.1, t); this.noise(0.1, t + 0.05); }
-    },
-    note(f, d, v, t) {
-        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-        o.type = 'triangle'; o.frequency.setValueAtTime(f, t);
-        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t+0.01);
-        g.gain.exponentialRampToValueAtTime(0.001, t+d);
-        o.connect(g).connect(this.ctx.destination);
-        o.start(t); o.stop(t+d);
-    },
-    glide(f1, f2, d, t) {
-        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-        o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t+d);
-        g.gain.setValueAtTime(0.04, t); g.gain.linearRampToValueAtTime(0, t+d);
-        o.connect(g).connect(this.ctx.destination);
-        o.start(t); o.stop(t+d);
-    },
-    noise(d, t) {
-        const b = this.ctx.createBuffer(1, 44100*d, 44100), da = b.getChannelData(0);
-        for(let i=0; i<da.length; i++) da[i] = Math.random()*2-1;
-        const s = this.ctx.createBufferSource(); s.buffer = b;
-        const g = this.ctx.createGain(); g.gain.setValueAtTime(0.04, t); g.gain.linearRampToValueAtTime(0, t+d);
-        s.connect(g).connect(this.ctx.destination);
-        s.start(t);
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.connect(g);
+        g.connect(this.ctx.destination);
+        const now = this.ctx.currentTime;
+
+        switch(type) {
+            case 'select':
+                o.type = 'sine';
+                o.frequency.setValueAtTime(440, now);
+                o.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+                g.gain.setValueAtTime(0.1, now);
+                g.gain.linearRampToValueAtTime(0, now + 0.1);
+                o.start(); o.stop(now + 0.1);
+                break;
+            case 'clone':
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(523.25, now);
+                o.frequency.exponentialRampToValueAtTime(1046.50, now + 0.2);
+                g.gain.setValueAtTime(0.2, now);
+                g.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                o.start(); o.stop(now + 0.2);
+                break;
+            case 'jump':
+                o.type = 'square';
+                o.frequency.setValueAtTime(150, now);
+                o.frequency.exponentialRampToValueAtTime(600, now + 0.3);
+                g.gain.setValueAtTime(0.1, now);
+                g.gain.linearRampToValueAtTime(0, now + 0.3);
+                o.start(); o.stop(now + 0.3);
+                break;
+            case 'capture':
+                const noise = this.ctx.createBufferSource();
+                const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+                noise.buffer = buffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(1000, now);
+                filter.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                const ng = this.ctx.createGain();
+                ng.gain.setValueAtTime(0.3, now);
+                ng.gain.linearRampToValueAtTime(0, now + 0.1);
+                noise.connect(filter); filter.connect(ng); ng.connect(this.ctx.destination);
+                noise.start();
+                break;
+            case 'win':
+                [440, 554, 659, 880].forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gn = this.ctx.createGain();
+                    osc.connect(gn); gn.connect(this.ctx.destination);
+                    osc.frequency.setValueAtTime(f, now + i * 0.15);
+                    gn.gain.setValueAtTime(0.1, now + i * 0.15);
+                    gn.gain.linearRampToValueAtTime(0, now + i * 0.15 + 0.4);
+                    osc.start(now + i * 0.15); osc.stop(now + i * 0.15 + 0.4);
+                });
+                break;
+            case 'undo':
+                o.type = 'sawtooth';
+                o.frequency.setValueAtTime(880, now);
+                o.frequency.exponentialRampToValueAtTime(220, now + 0.3);
+                g.gain.setValueAtTime(0.1, now);
+                g.gain.linearRampToValueAtTime(0, now + 0.3);
+                o.start(); o.stop(now + 0.3);
+                break;
+        }
     }
 };
 
-class KAtaxx {
+/**
+ * Great Fairy Engine (Search & Evaluation)
+ */
+class GreatFairyEngine {
     constructor() {
-        this.board = [];
-        this.turn = P1;
-        this.playerSide = P1;
-        this.history = [];
-        this.selected = null;
-        this.isThinking = false;
-        
-        this.initSelectors();
-        document.getElementById('lv-slider').oninput = (e) => document.getElementById('lv-val').textContent = e.target.value;
-        this.reset();
+        this.tt = new Map();
+        this.history = new Int32Array(49 * 49);
+        this.nodes = 0;
+        this.startTime = 0;
+        this.timeLimit = 0;
+        this.abort = false;
+        this.weights = [
+            [150, -30, 30, 15, 30, -30, 150],
+            [-30, -50, -10, -5, -10, -50, -30],
+            [30, -10, 20, 5, 20, -10, 30],
+            [15, -5, 5, 10, 5, -5, 15],
+            [30, -10, 20, 5, 20, -10, 30],
+            [-30, -50, -10, -5, -10, -50, -30],
+            [150, -30, 30, 15, 30, -30, 150]
+        ];
+        this.zobrist = Array(49).fill(0).map(() => [this.rand32(), this.rand32()]);
     }
 
-    initSelectors() {
-        const s1 = document.getElementById('p1-mask');
-        const s2 = document.getElementById('p2-mask');
-        ALL_MASKS.forEach((m, i) => {
-            const o1 = document.createElement('option');
-            o1.value = m.icon; o1.textContent = m.icon + " " + m.name;
-            if (i === 0) o1.selected = true;
-            s1.appendChild(o1);
+    rand32() { return Math.floor(Math.random() * 0xFFFFFFFF); }
 
-            const o2 = document.createElement('option');
-            o2.value = m.icon; o2.textContent = m.icon + " " + m.name;
-            if (i === 1) o2.selected = true;
-            s2.appendChild(o2);
+    getHash(board) {
+        let h = 0;
+        for (let i = 0; i < 49; i++) {
+            const r = Math.floor(i/7), c = i%7;
+            const v = board[r][c];
+            if (v === 1) h ^= this.zobrist[i][0];
+            else if (v === 2) h ^= this.zobrist[i][1];
+        }
+        return h;
+    }
+
+    evaluate(board, turn) {
+        let score = 0, p1 = 0, p2 = 0;
+        for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 7; c++) {
+                const v = board[r][c];
+                if (v === 1) { p1++; score += this.weights[r][c]; } 
+                else if (v === 2) { p2++; score -= this.weights[r][c]; }
+            }
+        }
+        const material = (p1 - p2) * 100;
+        const total = score + material;
+        return turn === 1 ? total : -total;
+    }
+
+    getMoves(board, turn) {
+        const moves = [];
+        for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 7; c++) {
+                if (board[r][c] === turn) {
+                    for (let dr = -2; dr <= 2; dr++) {
+                        for (let dc = -2; dc <= 2; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            let tr = r + dr, tc = c + dc;
+                            if (tr >= 0 && tr < 7 && tc >= 0 && tc < 7 && board[tr][tc] === 0) {
+                                const dist = Math.max(Math.abs(dr), Math.abs(dc));
+                                let captures = 0;
+                                for(let ar=-1; ar<=1; ar++) {
+                                    for(let ac=-1; ac<=1; ac++) {
+                                        let nr=tr+ar, nc=tc+ac;
+                                        if(nr>=0&&nr<7&&nc>=0&&nc<7&&board[nr][nc]!==0&&board[nr][nc]!==3&&board[nr][nc]!==turn) captures++;
+                                    }
+                                }
+                                const historyScore = this.history[(r*7+c)*49 + (tr*7+tc)];
+                                moves.push({ fr: r, fc: c, tr, tc, dist, captures, priority: (captures * 50) - dist + (historyScore/1000) });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        const bestTargetMap = new Map();
+        for (const m of moves) {
+            const key = `${m.tr},${m.tc}`;
+            if (!bestTargetMap.has(key) || bestTargetMap.get(key).priority < m.priority) {
+                bestTargetMap.set(key, m);
+            }
+        }
+        return Array.from(bestTargetMap.values()).sort((a, b) => b.priority - a.priority);
+    }
+
+    simulate(board, m, p) {
+        const nb = board.map(row => [...row]);
+        if (m.dist === 2) nb[m.fr][m.fc] = 0;
+        nb[m.tr][m.tc] = p;
+        for(let dr=-1; dr<=1; dr++) {
+            for(let dc=-1; dc<=1; dc++) {
+                let nr=m.tr+dr, nc=m.tc+dc;
+                if(nr>=0 && nr<7 && nc>=0 && nc<7 && nb[nr][nc] !== 0 && nb[nr][nc] !== 3 && nb[nr][nc] !== p) nb[nr][nc] = p;
+            }
+        }
+        return nb;
+    }
+
+    search(board, turn, level) {
+        this.nodes = 0;
+        this.startTime = Date.now();
+        this.timeLimit = level * 100;
+        const maxDepth = Math.min(8, Math.max(1, Math.floor(level / 2)));
+        this.abort = false;
+        let best = null;
+        let depth = 1;
+        this.tt.clear();
+        this.history.fill(0);
+        const allMoves = this.getMoves(board, turn);
+        if (allMoves.length === 0) return null;
+        
+        if (level < 5 && Math.random() > 0.4) return allMoves[Math.floor(Math.random() * allMoves.length)];
+
+        while (Date.now() - this.startTime < this.timeLimit && depth <= maxDepth) {
+            const res = this.pvs(board, depth, -1000000, 1000000, turn);
+            if (this.abort && depth > 1) break;
+            if (res.move) best = res.move;
+            depth++;
+        }
+        return best || allMoves[0];
+    }
+
+    pvs(board, depth, alpha, beta, turn) {
+        this.nodes++;
+        if (this.nodes % 256 === 0 && Date.now() - this.startTime > this.timeLimit) {
+            this.abort = true;
+            return { score: 0 };
+        }
+        const hash = this.getHash(board);
+        if (this.tt.has(hash)) {
+            const entry = this.tt.get(hash);
+            if (entry.depth >= depth) return entry;
+        }
+        if (depth === 0) return { score: this.quiescence(board, alpha, beta, turn, 0) };
+        const moves = this.getMoves(board, turn);
+        if (moves.length === 0) {
+            const oppMoves = this.getMoves(board, turn === 1 ? 2 : 1);
+            if (oppMoves.length === 0) return { score: this.evaluate(board, turn) };
+            return { score: -this.pvs(board, depth, -beta, -alpha, turn === 1 ? 2 : 1).score };
+        }
+        let bestScore = -Infinity;
+        let bestMove = moves[0];
+        for (let i = 0; i < moves.length; i++) {
+            const m = moves[i];
+            const nextBoard = this.simulate(board, m, turn);
+            let score;
+            if (i === 0) score = -this.pvs(nextBoard, depth - 1, -beta, -alpha, turn === 1 ? 2 : 1).score;
+            else {
+                score = -this.pvs(nextBoard, depth - 1, -alpha - 1, -alpha, turn === 1 ? 2 : 1).score;
+                if (score > alpha && score < beta) score = -this.pvs(nextBoard, depth - 1, -beta, -alpha, turn === 1 ? 2 : 1).score;
+            }
+            if (this.abort) break;
+            if (score > bestScore) { bestScore = score; bestMove = m; }
+            alpha = Math.max(alpha, score);
+            if (alpha >= beta) {
+                this.history[(m.fr*7+m.fc)*49 + (m.tr*7+m.tc)] += depth * depth;
+                break;
+            }
+        }
+        const res = { score: bestScore, move: bestMove, depth };
+        this.tt.set(hash, res);
+        return res;
+    }
+
+    quiescence(board, alpha, beta, turn, qDepth) {
+        this.nodes++;
+        const standPat = this.evaluate(board, turn);
+        if (standPat >= beta) return beta;
+        if (alpha < standPat) alpha = standPat;
+        if (qDepth > 1) return standPat;
+        const moves = this.getMoves(board, turn).filter(m => m.captures > 0);
+        for (const m of moves) {
+            const nextBoard = this.simulate(board, m, turn);
+            const score = -this.quiescence(nextBoard, -beta, -alpha, turn === 1 ? 2 : 1, qDepth + 1);
+            if (score >= beta) return beta;
+            if (score > alpha) alpha = score;
+        }
+        return alpha;
+    }
+}
+
+/**
+ * Arcade Stage Database
+ */
+const ARCADE_STAGES = [
+    { name: "01: Classic Arena", blocks: [] },
+    { name: "02: Four Corners", blocks: [[1,1], [1,5], [5,1], [5,5]] },
+    { name: "03: The Diamond", blocks: [[3,0], [0,3], [6,3], [3,6]] },
+    { name: "04: The Cross", blocks: [[3,1], [3,2], [3,4], [3,5], [1,3], [2,3], [4,3], [5,3]] },
+    { name: "05: The Gauntlet", blocks: [[1,1],[2,1],[4,1],[5,1],[1,5],[2,5],[4,5],[5,5]] },
+    { name: "06: Checkerboard", blocks: [[0,1],[0,3],[0,5],[1,0],[1,2],[1,4],[1,6],[2,1],[2,3],[2,5],[3,0],[3,2],[3,4],[3,6],[4,1],[4,3],[4,5],[5,0],[5,2],[5,4],[5,6],[6,1],[6,3],[6,5]] },
+    { name: "07: Maze of Woods", blocks: [[1,1],[1,2],[1,3],[1,5],[2,1],[3,1],[3,3],[3,4],[3,5],[4,5],[5,1],[5,3],[5,4],[5,5]] },
+    { name: "08: Clock Tower Inner", blocks: [[2,2],[2,3],[2,4],[3,2],[3,4],[4,2],[4,3],[4,4]] },
+    { name: "09: Five Pillars", blocks: [[1,1],[5,1],[1,5],[5,5],[3,3]] },
+    { name: "10: Stone Hourglass", blocks: [[0,0],[0,1],[0,5],[0,6],[1,1],[1,5],[5,1],[5,5],[6,0],[6,1],[6,5],[6,6]] },
+    { name: "11: Split River", blocks: [[3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6]] },
+    { name: "12: Eye of Truth", blocks: [[2,2],[2,4],[4,2],[4,4],[3,3]] },
+    { name: "13: Double Bar", blocks: [[1,0],[1,1],[1,2],[1,4],[1,5],[1,6],[5,0],[5,1],[5,2],[5,4],[5,5],[5,6]] },
+    { name: "14: Solid Core", blocks: [[2,2],[2,3],[2,4],[3,2],[3,3],[3,4],[4,2],[4,3],[4,4]] },
+    { name: "15: Corner Pockets", blocks: [[0,1],[1,0],[1,1],[0,5],[1,5],[1,6],[5,0],[5,1],[6,1],[5,5],[5,6],[6,5]] },
+    { name: "16: The H Temple", blocks: [[1,1],[2,1],[3,1],[4,1],[5,1],[1,5],[2,5],[3,5],[4,5],[5,5],[3,2],[3,4]] },
+    { name: "17: Stone Fortress", blocks: [[0,3],[1,3],[2,3],[4,3],[5,3],[6,3],[3,0],[3,1],[3,2],[3,4],[3,5],[3,6]] },
+    { name: "18: Spiral Wood", blocks: [[1,1],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5],[5,5],[5,4],[5,3],[5,2],[5,1],[4,1],[3,1]] },
+    { name: "19: Final Void", blocks: [[2,2],[2,3],[2,4],[3,2],[3,4],[4,2],[4,3],[4,4], [0,3],[6,3],[3,0],[3,6]] },
+    { name: "--- RANDOM CURSE ---", value: "random" },
+    { name: "--- CUSTOM WORKSHOP ---", value: "custom" }
+];
+
+/**
+ * The 24 Masks of Termina Database
+ */
+const MASKS = [
+    { n: "Deku Mask", i: "🌿" }, { n: "Goron Mask", i: "🪨" }, { n: "Zora Mask", i: "🐬" }, { n: "Fierce Deity", i: "⚔️" },
+    { n: "Majora's Mask", i: "👹" }, { n: "Bunny Hood", i: "🐇" }, { n: "Keaton Mask", i: "🦊" }, { n: "Mask of Truth", i: "👁️" },
+    { n: "Postman's Hat", i: "✉️" }, { n: "Blast Mask", i: "💣" }, { n: "All-Night Mask", i: "☕" }, { n: "Stone Mask", i: "🧱" },
+    { n: "Great Fairy Mask", i: "🧚" }, { n: "Bremen Mask", i: "🦅" }, { n: "Don Gero's Mask", i: "🐸" }, { n: "Mask of Scents", i: "🐽" },
+    { n: "Romani's Mask", i: "🐄" }, { n: "Circus Leader", i: "🎭" }, { n: "Kafei's Mask", i: "🧑" }, { n: "Couple's Mask", i: "💞" },
+    { n: "Kamaro's Mask", i: "🕺" }, { n: "Gibdo Mask", i: "🧟" }, { n: "Garo's Mask", i: "👤" }, { n: "Captain's Hat", i: "💀" },
+    { n: "Giant's Mask", i: "🏢" }, { n: "The Moon", i: "🌚" }, { n: "Sun Mask", i: "☀️" }, { n: "Moon Mask", i: "🌙" }
+];
+
+const DIFFICULTY_NAMES = [
+    "Broken Mask (Easy)", "Broken Mask (Easy)", "Tatl (Quick)", "Tatl (Quick)", 
+    "Deku Scrub (Entry)", "Deku Scrub (Entry)", "Goron (Sturdy)", "Goron (Sturdy)",
+    "Skull Kid (Balanced)", "Skull Kid (Balanced)", "Skull Kid (Balanced)", "Garo Master (Tactical)",
+    "Garo Master (Tactical)", "Majora's Shadow (Vicious)", "Majora's Shadow (Vicious)", "Great Fairy (Master)",
+    "Great Fairy (Master)", "The Moon (Brutal)", "The Moon (Brutal)", "Termina's End (Deep)"
+];
+
+class MajoraAtaxx {
+    constructor() {
+        this.board = []; this.turn = 1; this.history = []; this.selected = null; this.thinking = false;
+        this.gameOver = false;
+        this.engine = new GreatFairyEngine();
+        this.initUI(); this.reset();
+    }
+
+    initUI() {
+        const s1 = document.getElementById('p1-mask'), s2 = document.getElementById('p2-mask'), ms = document.getElementById('map-select');
+        MASKS.forEach(m => {
+            s1.add(new Option(`${m.i} ${m.n}`, m.i));
+            s2.add(new Option(`${m.i} ${m.n}`, m.i));
+        });
+        s1.value = "⚔️"; s2.value = "👹";
+        ARCADE_STAGES.forEach((l, idx) => {
+            ms.add(new Option(l.name, l.value !== undefined ? l.value : idx));
         });
     }
 
-    reset() {
-        this.board = Array(SIZE).fill(0).map(() => Array(SIZE).fill(EMPTY));
-        const val = document.getElementById('map-select').value;
-        if (val === 'random') this.generateRandomSymmetricBoard();
-        else (ARCADE_MAPS[parseInt(val)] || []).forEach(([r,c]) => this.board[r][c] = BLOCK);
-
-        this.board[0][0] = P2; this.board[0][6] = P1; this.board[6][0] = P1; this.board[6][6] = P2;
-        this.turn = P1; this.history = []; this.selected = null;
-        document.getElementById('overlay').style.display = 'none';
-        this.render();
-        this.checkAITurn();
+    updateDifficultyLabel() {
+        const val = document.getElementById('difficulty-slider').value;
+        document.getElementById('difficulty-val').textContent = val;
+        document.getElementById('difficulty-name').textContent = DIFFICULTY_NAMES[val - 1];
     }
 
-    switchSides() {
-        if (this.isThinking) return;
-        AudioEngine.play('ui');
-        this.playerSide = (this.playerSide === P1) ? P2 : P1;
+    handleMapChange() { this.reset(); }
+
+    reset() {
+        this.board = Array(7).fill(0).map(() => Array(7).fill(0));
+        const mapVal = document.getElementById('map-select').value;
+        document.getElementById('workshop-note').style.display = (mapVal === 'custom') ? 'block' : 'none';
+
+        if (mapVal === 'random') {
+            for (let i = 0; i < 8; i++) {
+                let r = Math.floor(Math.random() * 7), c = Math.floor(Math.random() * 7);
+                if ((r===0||r===6) && (c===0||c===6)) continue;
+                this.board[r][c] = 3; 
+            }
+        } else if (mapVal !== 'custom') {
+            const stage = ARCADE_STAGES[parseInt(mapVal)];
+            if (stage && stage.blocks) stage.blocks.forEach(([r,c]) => this.board[r][c] = 3);
+        }
+
+        this.board[0][0] = 2; this.board[6][6] = 2;
+        this.board[0][6] = 1; this.board[6][0] = 1;
+        this.turn = 1; this.history = []; this.selected = null; this.thinking = false;
+        this.gameOver = false;
+        document.getElementById('overlay').style.display = 'none';
+        
+        const fairy = document.getElementById('fairy');
+        fairy.textContent = "🧚‍♀️";
+        fairy.style.filter = "drop-shadow(0 0 5px pink)";
+        document.getElementById('ai-log-text').textContent = "DAWN OF A NEW DAY";
+
         this.render();
-        this.checkAITurn();
     }
 
     render() {
-        const boardEl = document.getElementById('board');
-        boardEl.innerHTML = '';
-        let s = {[P1]:0, [P2]:0};
-        const m1 = document.getElementById('p1-mask').value;
-        const m2 = document.getElementById('p2-mask').value;
+        const boardEl = document.getElementById('board'); boardEl.innerHTML = '';
+        const counts = {1:0, 2:0};
+        const m1 = document.getElementById('p1-mask').value, m2 = document.getElementById('p2-mask').value;
+        
+        let hints = new Map();
+        if (this.selected) {
+            for (let dr = -2; dr <= 2; dr++) {
+                for (let dc = -2; dc <= 2; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    let tr = this.selected.r + dr, tc = this.selected.c + dc;
+                    if (tr >= 0 && tr < 7 && tc >= 0 && tc < 7 && this.board[tr][tc] === 0) {
+                        hints.set(`${tr},${tc}`, Math.max(Math.abs(dr), Math.abs(dc)));
+                    }
+                }
+            }
+        }
 
-        for (let r = 0; r < SIZE; r++) {
-            for (let c = 0; c < SIZE; c++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
+        for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 7; c++) {
+                const cell = document.createElement('div'); cell.className = 'cell';
                 const v = this.board[r][c];
-
-                if (v === BLOCK) cell.classList.add('blocker');
+                if (v === 3) cell.classList.add('blocker');
                 if (this.selected?.r === r && this.selected?.c === c) cell.classList.add('selected');
                 
-                if (this.selected && v === EMPTY) {
-                    const d = Math.max(Math.abs(r-this.selected.r), Math.abs(c-this.selected.c));
-                    if (d === 1) cell.classList.add('clone-target');
-                    else if (d === 2) cell.classList.add('jump-target');
+                if (v === 1 || v === 2) {
+                    const p = document.createElement('div'); p.className = 'piece'; p.textContent = v === 1 ? m1 : m2;
+                    cell.appendChild(p); counts[v]++;
+                } else if (hints.has(`${r},${c}`)) {
+                    const hint = document.createElement('div');
+                    hint.className = `move-hint ${hints.get(`${r},${c}`) === 1 ? 'clone-hint' : 'jump-hint'}`;
+                    cell.appendChild(hint);
                 }
 
-                if (v === P1 || v === P2) {
-                    const p = document.createElement('div');
-                    p.className = `piece`;
-                    p.textContent = v === P1 ? m1 : m2;
-                    cell.appendChild(p);
-                    s[v]++;
-                }
                 cell.onclick = () => this.handleCellClick(r, c);
                 boardEl.appendChild(cell);
             }
         }
+        document.getElementById('count-p1').textContent = counts[1];
+        document.getElementById('count-p2').textContent = counts[2];
+        document.getElementById('card-p1').classList.toggle('active', this.turn === 1);
+        document.getElementById('card-p2').classList.toggle('active', this.turn === 2);
+        
+        if (!this.thinking) {
+            document.getElementById('fairy').textContent = this.turn === 1 ? "🧚‍♀️" : "🧚";
+            document.getElementById('ai-log-text').textContent = this.turn === 1 ? "P1 TURN" : "P2 TURN";
+        }
 
-        document.getElementById('count-p1').textContent = s[P1];
-        document.getElementById('count-p2').textContent = s[P2];
-        document.getElementById('card-p1').classList.toggle('active', this.turn === P1);
-        document.getElementById('card-p2').classList.toggle('active', this.turn === P2);
-        this.checkGameOver(s);
+        this.checkGameOver(counts);
     }
 
     handleCellClick(r, c) {
-        if (this.isThinking) return;
-        if (document.getElementById('game-mode').value === 'pva' && this.turn !== this.playerSide) return;
+        if (this.thinking || this.gameOver) return;
+        
+        const mapVal = document.getElementById('map-select').value;
+        if (mapVal === 'custom' && this.board[r][c] !== 1 && this.board[r][c] !== 2) {
+            const isCorner = (r===0||r===6) && (c===0||c===6);
+            if (!isCorner) {
+                this.board[r][c] = this.board[r][c] === 3 ? 0 : 3;
+                AudioFX.play('select');
+                this.render();
+                return;
+            }
+        }
 
-        if (this.board[r][c] === this.turn) {
-            this.selected = { r, c };
-            AudioEngine.play('ui');
-            this.render();
-        } else if (this.selected && this.board[r][c] === EMPTY) {
+        if (this.board[r][c] === this.turn) { 
+            this.selected = { r, c }; 
+            AudioFX.play('select');
+            this.render(); 
+        } else if (this.selected && this.board[r][c] === 0) {
             const d = Math.max(Math.abs(r-this.selected.r), Math.abs(c-this.selected.c));
             if (d <= 2) this.executeMove(this.selected.r, this.selected.c, r, c);
+            else { this.selected = null; this.render(); }
+        } else {
+            this.selected = null; this.render();
         }
     }
 
     executeMove(fr, fc, tr, tc) {
         this.history.push(JSON.stringify(this.board));
         const d = Math.max(Math.abs(tr-fr), Math.abs(tc-fc));
-        if (d === 2) this.board[fr][fc] = EMPTY;
+        
+        AudioFX.play(d === 1 ? 'clone' : 'jump');
+
+        if (d === 2) this.board[fr][fc] = 0;
         this.board[tr][tc] = this.turn;
         
-        let cap = false;
+        let captured = false;
         for(let dr=-1; dr<=1; dr++) {
             for(let dc=-1; dc<=1; dc++) {
                 let nr=tr+dr, nc=tc+dc;
-                if(nr>=0 && nr<SIZE && nc>=0 && nc<SIZE) {
-                    const v = this.board[nr][nc];
-                    if(v !== EMPTY && v !== BLOCK && v !== this.turn) {
-                        this.board[nr][nc] = this.turn;
-                        cap = true;
-                    }
+                if(nr>=0 && nr<7 && nc>=0 && nc<7 && this.board[nr][nc] !== 0 && this.board[nr][nc] !== 3 && this.board[nr][nc] !== this.turn) {
+                    this.board[nr][nc] = this.turn;
+                    captured = true;
                 }
             }
         }
+        if (captured) AudioFX.play('capture');
 
-        AudioEngine.play(cap ? 'capture' : 'move');
-        this.selected = null;
-        this.turn = this.turn === P1 ? P2 : P1;
-        if (!this.hasValidMoves(this.turn)) this.turn = this.turn === P1 ? P2 : P1;
+        this.selected = null; 
+        this.turn = (this.turn === 1) ? 2 : 1;
+
+        if (this.engine.getMoves(this.board, this.turn).length === 0) {
+            this.turn = (this.turn === 1) ? 2 : 1;
+        }
         
         this.render();
-        this.checkAITurn();
-    }
-
-    checkAITurn() {
-        if (document.getElementById('game-mode').value === 'pva' && this.turn !== this.playerSide) this.runAI();
-    }
-
-    hasValidMoves(p) {
-        for(let r=0; r<SIZE; r++)
-            for(let c=0; c<SIZE; c++)
-                if(this.board[r][c] === p)
-                    for(let dr=-2; dr<=2; dr++)
-                        for(let dc=-2; dc<=2; dc++) {
-                            let nr=r+dr, nc=c+dc;
-                            if(nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && this.board[nr][nc] === EMPTY) return true;
-                        }
-        return false;
+        
+        // AI Logic: Only run if it's AI's turn AND game is not over AND history exists (game started)
+        if (this.turn === 2 && document.getElementById('game-mode').value === 'pva' && !this.gameOver && this.history.length > 0) {
+            setTimeout(() => this.runAI(), 250);
+        }
     }
 
     runAI() {
-        this.isThinking = true;
-        document.getElementById('ai-status').textContent = 'CLOCK TOWN IS WAITING...';
-        const lv = parseInt(document.getElementById('lv-slider').value);
+        if (this.gameOver || this.thinking || this.turn !== 2) return;
+        
+        this.thinking = true;
+        const fairy = document.getElementById('fairy');
+        const log = document.getElementById('ai-log-text');
+        
+        fairy.textContent = "✨";
+        fairy.style.filter = "drop-shadow(0 0 10px yellow)";
+        log.textContent = "FAIRY CONCENTRATING...";
 
         setTimeout(() => {
-            const moves = [];
-            const aiColor = this.turn;
-            const humanColor = aiColor === P1 ? P2 : P1;
-
-            for(let r=0; r<SIZE; r++)
-                for(let c=0; c<SIZE; c++)
-                    if(this.board[r][c] === aiColor)
-                        for(let dr=-2; dr<=2; dr++)
-                            for(let dc=-2; dc<=2; dc++) {
-                                let tr=r+dr, tc=c+dc;
-                                if(tr>=0 && tr<SIZE && tc>=0 && tc<SIZE && this.board[tr][tc] === EMPTY)
-                                    moves.push({fr:r, fc:c, tr, tc});
-                            }
-
-            if (moves.length) {
-                moves.forEach(m => {
-                    let s = 0;
-                    for(let dr=-1; dr<=1; dr++)
-                        for(let dc=-1; dc<=1; dc++) {
-                            let nr=m.tr+dr, nc=m.tc+dc;
-                            if(nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && this.board[nr][nc] === humanColor) s++;
-                        }
-                    if (Math.max(Math.abs(m.tr-m.fr), Math.abs(m.tc-m.fc)) === 1) s += 0.5;
-                    m.score = s;
-                });
-
-                moves.sort((a,b) => b.score - a.score);
-                let chosen = (Math.random() * 100 < lv) ? moves[0] : moves[Math.floor(Math.random() * moves.length)];
-                if(chosen) this.executeMove(chosen.fr, chosen.fc, chosen.tr, chosen.tc);
+            if (this.gameOver) { this.thinking = false; return; }
+            
+            const lvl = parseInt(document.getElementById('difficulty-slider').value);
+            const m = this.engine.search(this.board, 2, lvl);
+            if (m) {
+                this.executeMove(m.fr, m.fc, m.tr, m.tc);
+            } else {
+                this.turn = 1;
+                this.render();
             }
-            this.isThinking = false;
-            document.getElementById('ai-status').textContent = 'DAWN OF A NEW TURN';
-        }, 600);
+            this.thinking = false;
+        }, 50);
     }
 
-    undo() {
-        if (!this.history.length || this.isThinking) return;
-        this.board = JSON.parse(this.history.pop());
-        if (document.getElementById('game-mode').value === 'pva' && this.history.length) this.board = JSON.parse(this.history.pop());
-        this.turn = this.playerSide;
+    switchSides() {
+        if (this.thinking || this.gameOver) return;
+        this.turn = (this.turn === 1) ? 2 : 1;
+        this.selected = null;
+        AudioFX.play('undo');
         this.render();
+        // If switched TO the AI's turn during a game, let it move
+        if (this.turn === 2 && document.getElementById('game-mode').value === 'pva' && this.history.length > 0) {
+            setTimeout(() => this.runAI(), 250);
+        }
+    }
+
+    undo() { 
+        if (this.history.length && !this.thinking) { 
+            this.board = JSON.parse(this.history.pop()); 
+            this.turn = 1; 
+            this.gameOver = false;
+            AudioFX.play('undo');
+            this.selected = null;
+            this.render(); 
+        } 
     }
 
     checkGameOver(s) {
-        if ((!this.hasValidMoves(P1) && !this.hasValidMoves(P2)) || s[P1] === 0 || s[P2] === 0) {
-            const ov = document.getElementById('overlay');
-            if (ov.style.display === 'flex') return;
-            ov.style.display = 'flex';
-            const title = document.getElementById('win-title');
-            title.textContent = s[P1] === s[P2] ? "CURSE BROKEN (DRAW)" : (s[P1] > s[P2] ? `P1 TRIUMPHS` : `P2 TRIUMPHS`);
-            document.getElementById('win-desc').textContent = `The world is saved. Final Count: ${s[P1]} to ${s[P2]}.`;
-        }
-    }
+        const m1 = this.engine.getMoves(this.board, 1).length;
+        const m2 = this.engine.getMoves(this.board, 2).length;
+        const emptyCells = this.board.flat().filter(x => x === 0).length;
 
-    generateRandomSymmetricBoard() {
-        const pairs = Math.floor(Math.random() * 5) + 3;
-        for (let i = 0; i < pairs; i++) {
-            const r = Math.floor(Math.random() * SIZE);
-            const c = Math.floor(Math.random() * (SIZE / 2));
-            if ((r === 0 || r === 6) && (c === 0 || c === 6)) continue;
-            this.board[r][c] = BLOCK;
-            this.board[r][SIZE - 1 - c] = BLOCK;
+        if ((m1 === 0 && m2 === 0) || s[1] === 0 || s[2] === 0 || emptyCells === 0) {
+            this.gameOver = true;
+            this.thinking = false;
+            if (document.getElementById('overlay').style.display !== 'flex') {
+                AudioFX.play('win');
+                document.getElementById('overlay').style.display = 'flex';
+                document.getElementById('win-title').textContent = s[1] === s[2] ? "CURSE DRAWN" : (s[1] > s[2] ? "HERO TRIUMPHS" : "GREAT FAIRY WINS");
+                document.getElementById('win-desc').textContent = `Final Count: ${s[1]} to ${s[2]}`;
+            }
         }
     }
 }
-
-const game = new KAtaxx();
+const game = new MajoraAtaxx();
 </script>
 </body>
 </html>
