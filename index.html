@@ -209,9 +209,17 @@
                 </select>
             </div>
             <div class="setting-group">
-                <label>Level: <span id="difficulty-val">10</span></label>
-                <input type="range" id="difficulty-slider" min="1" max="20" value="10" oninput="game.updateDifficultyLabel()">
+                <label>First Turn</label>
+                <select id="first-turn">
+                    <option value="1">Hero (P1)</option>
+                    <option value="2">Fairy AI (P2)</option>
+                </select>
             </div>
+        </div>
+
+        <div class="setting-group">
+            <label>Level: <span id="difficulty-val">10</span></label>
+            <input type="range" id="difficulty-slider" min="1" max="20" value="10" oninput="game.updateDifficultyLabel()">
         </div>
         
         <div id="difficulty-name" style="text-align: center; font-size: 0.65rem; color: #888; margin-top: -5px;">Skull Kid (Balanced)</div>
@@ -222,7 +230,6 @@
             <button onclick="game.reset()" class="primary">Reset</button>
         </div>
         
-        <!-- Workshop Start Button -->
         <button id="workshop-start" onclick="game.startCustomQuest()" class="success" style="display: none;">BEGIN QUEST</button>
     </div>
 </div>
@@ -598,7 +605,8 @@ class MajoraAtaxx {
         this.board[0][0] = 2; this.board[6][6] = 2;
         this.board[0][6] = 1; this.board[6][0] = 1;
         
-        this.turn = 1; this.history = []; this.selected = null; this.thinking = false;
+        this.turn = parseInt(document.getElementById('first-turn').value);
+        this.history = []; this.selected = null; this.thinking = false;
         this.gameOver = false;
         document.getElementById('overlay').style.display = 'none';
         
@@ -609,6 +617,11 @@ class MajoraAtaxx {
 
         this.updateSwitchButton();
         this.render();
+
+        // If AI goes first, trigger it
+        if (!this.isWorkshopMode && this.turn === 2 && document.getElementById('game-mode').value === 'pva') {
+            setTimeout(() => this.runAI(), 600);
+        }
     }
 
     updateSwitchButton() {
@@ -623,8 +636,14 @@ class MajoraAtaxx {
         document.getElementById('workshop-start').style.display = 'none';
         document.getElementById('ai-log-text').textContent = "BATTLE BEGINS!";
         AudioFX.play('win');
+        
+        this.turn = parseInt(document.getElementById('first-turn').value);
         this.updateSwitchButton();
         this.render();
+
+        if (this.turn === 2 && document.getElementById('game-mode').value === 'pva') {
+            setTimeout(() => this.runAI(), 600);
+        }
     }
 
     render() {
@@ -819,7 +838,6 @@ class MajoraAtaxx {
 }
 const game = new MajoraAtaxx();
 
-// Add listener to update switch button when game mode changes
 document.getElementById('game-mode').addEventListener('change', () => game.updateSwitchButton());
 </script>
 </body>
