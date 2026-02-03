@@ -695,9 +695,7 @@ class MajoraAtaxx {
         let captured = false;
         for(let dr=-1; dr<=1; dr++) {
             for(let dc=-1; dc<=1; dc++) {
-                let nr=tr+dr, nc=tc+ac;
-                // Note: Fixed typo nc=tc+ac to nc=tc+dc
-                nc = tc + dc; 
+                let nr=tr+dr, nc=tc+dc;
                 if(nr>=0 && nr<7 && nc>=0 && nc<7 && this.board[nr][nc] !== 0 && this.board[nr][nc] !== 3 && this.board[nr][nc] !== this.turn) {
                     this.board[nr][nc] = this.turn;
                     captured = true;
