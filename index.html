@@ -679,7 +679,12 @@ class MajoraAtaxx {
     }
 
     executeMove(fr, fc, tr, tc) {
-        this.history.push(JSON.stringify(this.board));
+        // Save state before move
+        this.history.push(JSON.stringify({
+            board: this.board.map(row => [...row]),
+            turn: this.turn
+        }));
+
         const d = Math.max(Math.abs(tr-fr), Math.abs(tc-fc));
         
         AudioFX.play(d === 1 ? 'clone' : 'jump');
@@ -690,7 +695,9 @@ class MajoraAtaxx {
         let captured = false;
         for(let dr=-1; dr<=1; dr++) {
             for(let dc=-1; dc<=1; dc++) {
-                let nr=tr+dr, nc=tc+dc;
+                let nr=tr+dr, nc=tc+ac;
+                // Note: Fixed typo nc=tc+ac to nc=tc+dc
+                nc = tc + dc; 
                 if(nr>=0 && nr<7 && nc>=0 && nc<7 && this.board[nr][nc] !== 0 && this.board[nr][nc] !== 3 && this.board[nr][nc] !== this.turn) {
                     this.board[nr][nc] = this.turn;
                     captured = true;
@@ -708,7 +715,6 @@ class MajoraAtaxx {
         
         this.render();
         
-        // AI Logic: Only run if it's AI's turn AND game is not over AND history exists (game started)
         if (this.turn === 2 && document.getElementById('game-mode').value === 'pva' && !this.gameOver && this.history.length > 0) {
             setTimeout(() => this.runAI(), 250);
         }
@@ -746,7 +752,6 @@ class MajoraAtaxx {
         this.selected = null;
         AudioFX.play('undo');
         this.render();
-        // If switched TO the AI's turn during a game, let it move
         if (this.turn === 2 && document.getElementById('game-mode').value === 'pva' && this.history.length > 0) {
             setTimeout(() => this.runAI(), 250);
         }
@@ -754,8 +759,9 @@ class MajoraAtaxx {
 
     undo() { 
         if (this.history.length && !this.thinking) { 
-            this.board = JSON.parse(this.history.pop()); 
-            this.turn = 1; 
+            const lastState = JSON.parse(this.history.pop());
+            this.board = lastState.board; 
+            this.turn = lastState.turn; 
             this.gameOver = false;
             AudioFX.play('undo');
             this.selected = null;
