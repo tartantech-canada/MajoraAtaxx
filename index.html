@@ -129,6 +129,8 @@
         input[type="range"] { accent-color: var(--clock-gold); cursor: pointer; }
 
         button.primary { background: #4a148c; border-color: var(--clock-gold); font-weight: bold; cursor: pointer; }
+        button.success { background: #1b5e20; border-color: #4caf50; font-weight: bold; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
         
         .overlay {
             position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95);
@@ -216,9 +218,12 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
             <button onclick="game.undo()">Undo</button>
-            <button onclick="game.switchSides()">Switch Turn</button>
+            <button id="switch-btn" onclick="game.switchSides()">Switch Turn</button>
             <button onclick="game.reset()" class="primary">Reset</button>
         </div>
+        
+        <!-- Workshop Start Button -->
+        <button id="workshop-start" onclick="game.startCustomQuest()" class="success" style="display: none;">BEGIN QUEST</button>
     </div>
 </div>
 
@@ -546,6 +551,7 @@ class MajoraAtaxx {
     constructor() {
         this.board = []; this.turn = 1; this.history = []; this.selected = null; this.thinking = false;
         this.gameOver = false;
+        this.isWorkshopMode = false;
         this.engine = new GreatFairyEngine();
         this.initUI(); this.reset();
     }
@@ -573,7 +579,10 @@ class MajoraAtaxx {
     reset() {
         this.board = Array(7).fill(0).map(() => Array(7).fill(0));
         const mapVal = document.getElementById('map-select').value;
-        document.getElementById('workshop-note').style.display = (mapVal === 'custom') ? 'block' : 'none';
+        
+        this.isWorkshopMode = (mapVal === 'custom');
+        document.getElementById('workshop-note').style.display = this.isWorkshopMode ? 'block' : 'none';
+        document.getElementById('workshop-start').style.display = this.isWorkshopMode ? 'block' : 'none';
 
         if (mapVal === 'random') {
             for (let i = 0; i < 8; i++) {
@@ -588,6 +597,7 @@ class MajoraAtaxx {
 
         this.board[0][0] = 2; this.board[6][6] = 2;
         this.board[0][6] = 1; this.board[6][0] = 1;
+        
         this.turn = 1; this.history = []; this.selected = null; this.thinking = false;
         this.gameOver = false;
         document.getElementById('overlay').style.display = 'none';
@@ -595,8 +605,25 @@ class MajoraAtaxx {
         const fairy = document.getElementById('fairy');
         fairy.textContent = "🧚‍♀️";
         fairy.style.filter = "drop-shadow(0 0 5px pink)";
-        document.getElementById('ai-log-text').textContent = "DAWN OF A NEW DAY";
+        document.getElementById('ai-log-text').textContent = this.isWorkshopMode ? "DESIGN YOUR ARENA" : "DAWN OF A NEW DAY";
 
+        this.updateSwitchButton();
+        this.render();
+    }
+
+    updateSwitchButton() {
+        const mode = document.getElementById('game-mode').value;
+        const btn = document.getElementById('switch-btn');
+        btn.disabled = (mode !== 'pva' || this.isWorkshopMode);
+    }
+
+    startCustomQuest() {
+        this.isWorkshopMode = false;
+        document.getElementById('workshop-note').style.display = 'none';
+        document.getElementById('workshop-start').style.display = 'none';
+        document.getElementById('ai-log-text').textContent = "BATTLE BEGINS!";
+        AudioFX.play('win');
+        this.updateSwitchButton();
         this.render();
     }
 
@@ -606,7 +633,7 @@ class MajoraAtaxx {
         const m1 = document.getElementById('p1-mask').value, m2 = document.getElementById('p2-mask').value;
         
         let hints = new Map();
-        if (this.selected) {
+        if (this.selected && !this.isWorkshopMode) {
             for (let dr = -2; dr <= 2; dr++) {
                 for (let dc = -2; dc <= 2; dc++) {
                     if (dr === 0 && dc === 0) continue;
@@ -640,29 +667,33 @@ class MajoraAtaxx {
         }
         document.getElementById('count-p1').textContent = counts[1];
         document.getElementById('count-p2').textContent = counts[2];
-        document.getElementById('card-p1').classList.toggle('active', this.turn === 1);
-        document.getElementById('card-p2').classList.toggle('active', this.turn === 2);
         
-        if (!this.thinking) {
-            document.getElementById('fairy').textContent = this.turn === 1 ? "🧚‍♀️" : "🧚";
-            document.getElementById('ai-log-text').textContent = this.turn === 1 ? "P1 TURN" : "P2 TURN";
+        if (!this.isWorkshopMode) {
+            document.getElementById('card-p1').classList.toggle('active', this.turn === 1);
+            document.getElementById('card-p2').classList.toggle('active', this.turn === 2);
+            
+            if (!this.thinking) {
+                document.getElementById('fairy').textContent = this.turn === 1 ? "🧚‍♀️" : "🧚";
+                document.getElementById('ai-log-text').textContent = this.turn === 1 ? "P1 TURN" : "P2 TURN";
+            }
+            this.checkGameOver(counts);
+        } else {
+            document.getElementById('card-p1').classList.remove('active');
+            document.getElementById('card-p2').classList.remove('active');
         }
-
-        this.checkGameOver(counts);
     }
 
     handleCellClick(r, c) {
         if (this.thinking || this.gameOver) return;
         
-        const mapVal = document.getElementById('map-select').value;
-        if (mapVal === 'custom' && this.board[r][c] !== 1 && this.board[r][c] !== 2) {
+        if (this.isWorkshopMode) {
             const isCorner = (r===0||r===6) && (c===0||c===6);
             if (!isCorner) {
                 this.board[r][c] = this.board[r][c] === 3 ? 0 : 3;
                 AudioFX.play('select');
                 this.render();
-                return;
             }
+            return;
         }
 
         if (this.board[r][c] === this.turn) { 
@@ -679,14 +710,12 @@ class MajoraAtaxx {
     }
 
     executeMove(fr, fc, tr, tc) {
-        // Save state before move
         this.history.push(JSON.stringify({
             board: this.board.map(row => [...row]),
             turn: this.turn
         }));
 
         const d = Math.max(Math.abs(tr-fr), Math.abs(tc-fc));
-        
         AudioFX.play(d === 1 ? 'clone' : 'jump');
 
         if (d === 2) this.board[fr][fc] = 0;
@@ -713,13 +742,13 @@ class MajoraAtaxx {
         
         this.render();
         
-        if (this.turn === 2 && document.getElementById('game-mode').value === 'pva' && !this.gameOver && this.history.length > 0) {
+        if (this.turn === 2 && document.getElementById('game-mode').value === 'pva' && !this.gameOver) {
             setTimeout(() => this.runAI(), 250);
         }
     }
 
     runAI() {
-        if (this.gameOver || this.thinking || this.turn !== 2) return;
+        if (this.gameOver || this.thinking || this.turn !== 2 || this.isWorkshopMode) return;
         
         this.thinking = true;
         const fairy = document.getElementById('fairy');
@@ -745,18 +774,21 @@ class MajoraAtaxx {
     }
 
     switchSides() {
-        if (this.thinking || this.gameOver) return;
+        if (this.thinking || this.gameOver || this.isWorkshopMode) return;
+        const mode = document.getElementById('game-mode').value;
+        if (mode !== 'pva') return;
+
         this.turn = (this.turn === 1) ? 2 : 1;
         this.selected = null;
         AudioFX.play('undo');
         this.render();
-        if (this.turn === 2 && document.getElementById('game-mode').value === 'pva' && this.history.length > 0) {
+        if (this.turn === 2 && !this.gameOver) {
             setTimeout(() => this.runAI(), 250);
         }
     }
 
     undo() { 
-        if (this.history.length && !this.thinking) { 
+        if (this.history.length && !this.thinking && !this.isWorkshopMode) { 
             const lastState = JSON.parse(this.history.pop());
             this.board = lastState.board; 
             this.turn = lastState.turn; 
@@ -768,6 +800,7 @@ class MajoraAtaxx {
     }
 
     checkGameOver(s) {
+        if (this.isWorkshopMode) return;
         const m1 = this.engine.getMoves(this.board, 1).length;
         const m2 = this.engine.getMoves(this.board, 2).length;
         const emptyCells = this.board.flat().filter(x => x === 0).length;
@@ -785,6 +818,9 @@ class MajoraAtaxx {
     }
 }
 const game = new MajoraAtaxx();
+
+// Add listener to update switch button when game mode changes
+document.getElementById('game-mode').addEventListener('change', () => game.updateSwitchButton());
 </script>
 </body>
 </html>
